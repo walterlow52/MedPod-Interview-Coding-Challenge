@@ -12,7 +12,7 @@ function App() {
   const peer_audio = useRef();
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((userStream) => {
+    navigator.mediaDevices.getUserMedia({ audioContext: true }).then((userStream) => {
       set_stream(userStream);
       user_audio.current.srcObject = userStream;
     });
@@ -27,26 +27,26 @@ function App() {
 // Step 2: Basic Audio Frequency Filter (Optional/Bonus)
 useEffect(() => {
   if (stream) {
-    const audio = new (window.AudioContext || window.webkitAudioContext)();
-    const audio_source = audio.createMediaStreamSource(stream);
-    const filter_gain = audio.createGain();
-    const frequency_cap = audio.createBiquadFilter();
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(stream);
+    const GainNode = audioContext.createGain();
+    const BiquadFilter = audioContext.createBiquadFilter();
 
-    filter_gain.gain.value = 0.75;
-    frequency_cap.type = "lowpass";
-    frequency_cap.frequency.value = 200;
+    GainNode.gain.value = 0.75;
+    BiquadFilter.type = "lowpass";
+    BiquadFilter.frequency.value = 200;
 
-    audio_source.connect(filter_gain);
-    filter_gain.connect(frequency_cap);
-    frequency_cap.connect(audio.destination);
+    source.connect(GainNode);
+    GainNode.connect(BiquadFilter);
+    BiquadFilter.connect(audioContext.destination);
   }
 }, [stream]);
 
 // Step 3: Audio Waveform Visualization Stream (Advanced/Extra Credit)
   useEffect(() => {
     if (stream) {
-      const audio = new (window.AudioContext || window.webkitAudioContext)();
-      const analyser = audio.createAnalyser();
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const analyser = audioContext.createAnalyser();
       analyser.fftSize = 2048;
       const buffer = analyser.frequencyBinCount;
       const arr = new Uint8Array(buffer);
@@ -111,33 +111,30 @@ useEffect(() => {
     set_peer(new_peer);
   }
 
-// Filter functions for Step 2
+/*// Filter functions for Step 2
   const [filter, set_filter] = useState(true);
 
   const filter_toggle = () => {
     set_filter(!filter);
     if (filter) {
-      filter_gain.disconnect();
-      frequency_filter.disconnect();
+      GainNode.disconnect();
+      BiquadFilter.disconnect();
     }
     else {
-      audio_source.connect(filter_gain);
-      filter_gain.connect(frequency_filter);
-      frequency_filter.connect(audio.destination);
+      source.connect(GainNode);
+      GainNode.connect(BiquadFilter);
+      BiquadFilter.connect(audioContext.destination);
     }
-  }
-
-
-// Step 3:
+  }*/
 
   return (
     <div>
       <h1> MedPod WebRTC Application </h1>
       <audio ref = {user_audio} controls autoPlay />
       <audio ref = {peer_audio} controls autoPlay />
-      <button onclick = {create_peer}> CALL </button>
-      <button onclick = {join_peer}> JOIN CALL </button>
-      <button onclick = {filter_toggle}> {filter ? 'FILTER: OFF' : 'FILTER: ON'} </button>
+      <button onClick = {create_peer}> CALL </button>
+      <button onClick = {join_peer}> JOIN CALL </button>
+      {/* <button onClick = {filter_toggle}> {filter ? 'FILTER: OFF' : 'FILTER: ON'} </button> */}
       <canvas id = "waveform" width = "500" height = "500"></canvas>
     </div>
   );
